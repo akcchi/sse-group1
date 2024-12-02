@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <h1>Stock Price Chart</h1>
+
+    <!-- 用户输入表单 -->
+    <form method="POST" action="/">
+        <label for="symbol">Enter Stock Symbol:</label>
+        <input type="text" id="symbol" name="symbol" value="{{ symbol }}" required>
+        <button type="submit">Generate Chart</button>
+    </form>
+
+    <!-- 显示图表 -->
+    {% if labels and values %}
+        <h2>Stock Price Chart for {{ company_name }} ({{ symbol }})</h2>
+        <div style="height: 50vh; width: 70%;">
+            <canvas id="stockChart"></canvas>
+        </div>
+    {% elif symbol %}
+        <p>No data found for the symbol "{{ symbol }}". Please try again.</p>
+    {% endif %}
+
+    <script>
+        // Use the labels and values passed from Flask
+        const labels = {{ labels | tojson }};
+        const values = {{ values | tojson }};
+
+        // Define the chart data and configuration
+        const data = {
+            labels: labels,
+            datasets: [{
+                label: 'Close Prices',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                data: values,
+                fill: false,
+                tension: 0.1
+            }]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        },
+                        ticks: {
+                            maxTicksLimit: 10
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Close Price'
+                        },
+                        beginAtZero: false
+                    }
+                }
+            }
+        };
+
+        // Render the chart
+        if (labels.length > 0 && values.length > 0) {
+            const stockChart = new Chart(
+                document.getElementById('stockChart'),
+                config
+            );
+        }
+    </script>
+</body>
+
+</html>
