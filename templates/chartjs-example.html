@@ -5,17 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Price Chart</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
     <h1>Stock Price Chart</h1>
 
-    <!-- 用户输入表单 -->
-    <form method="POST" action="/">
-        <label for="symbol">Enter Stock Symbol:</label>
-        <input type="text" id="symbol" name="symbol" value="{{ symbol }}" required>
-        <button type="submit">Generate Chart</button>
+    <form action="/buy_or_sell" method="GET">
+        <input type="text" name="number">
+        <button type="submit" name="action" value="buy" class="btn btn-primary d-xl-flex" style="margin-top: 3px;">Buy</button>
+        <button type="submit" name="action" value="sell" class="btn btn-primary d-xl-flex" style="margin-top: 3px;">Sell</button>
     </form>
 
     <!-- 显示图表 -->
@@ -27,6 +27,8 @@
     {% elif symbol %}
         <p>No data found for the symbol "{{ symbol }}". Please try again.</p>
     {% endif %}
+
+    <button class="btn btn-primary fs-5 me-2 py-2 px-4" type="button"><a style="color: white; text-decoration: none;" href="{{ return_url }}">Go back</a></button>
 
     <script>
         // Use the labels and values passed from Flask
