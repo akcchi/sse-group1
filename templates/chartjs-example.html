@@ -7,35 +7,70 @@
     <title>Stock Price Chart</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 使用flexbox将内容居中 */
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center; /* 水平居中 */
+            align-items: center;    /* 垂直居中 */
+            min-height: 100vh;      /* 占满视口高度 */
+            font-family: Arial, sans-serif;
+            text-align: center;     /* 文本水平居中 */
+        }
+
+        .content-container {
+            width: 90%;            /* 宽度占视口90% */
+            max-width: 800px;      /* 最大宽度800px */
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            height: 50vh;
+            width: 100%;           /* 图表宽度自适应容器 */
+        }
+
+        .btn-primary a {
+            color: white;
+            text-decoration: none;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Stock Price Chart</h1>
+    <div class="content-container">
+        <h1>Stock Price Chart</h1>
 
-    <form action="/buy_or_sell" method="GET">
-        <input type="text" name="number">
-        <button type="submit" name="action" value="buy" class="btn btn-primary d-xl-flex" style="margin-top: 3px;">Buy</button>
-        <button type="submit" name="action" value="sell" class="btn btn-primary d-xl-flex" style="margin-top: 3px;">Sell</button>
-    </form>
+        <form action="/buy_or_sell" method="GET">
+            <input type="text" name="number" placeholder="Enter number">
+            <button type="submit" name="action" value="buy" class="btn btn-primary" style="margin-top: 3px;">Buy</button>
+            <button type="submit" name="action" value="sell" class="btn btn-primary" style="margin-top: 3px;">Sell</button>
+        </form>
 
-    <!-- 显示图表 -->
-    {% if labels and values %}
-        <h2>Stock Price Chart for {{ company_name }} ({{ symbol }})</h2>
-        <div style="height: 50vh; width: 70%;">
-            <canvas id="stockChart"></canvas>
-        </div>
-    {% elif symbol %}
-        <p>No data found for the symbol "{{ symbol }}". Please try again.</p>
-    {% endif %}
+        <!-- 显示图表 -->
+        {% if labels and values %}
+            <h2>Stock Price Chart for {{ company_name }} ({{ symbol }})</h2>
+            <div class="chart-container">
+                <canvas id="stockChart"></canvas>
+            </div>
+        {% elif symbol %}
+            <p>No data found for the symbol "{{ symbol }}". Please try again.</p>
+        {% endif %}
 
-    <button class="btn btn-primary fs-5 me-2 py-2 px-4" type="button"><a style="color: white; text-decoration: none;" href="{{ return_url }}">Go back</a></button>
+        <button class="btn btn-primary fs-5 me-2 py-2 px-4" type="button">
+            <a href="{{ return_url }}">Go back</a>
+        </button>
+    </div>
 
     <script>
-        // Use the labels and values passed from Flask
+        // 使用 Flask 传递的 labels 和 values
         const labels = {{ labels | tojson }};
         const values = {{ values | tojson }};
 
-        // Define the chart data and configuration
+        // 定义图表数据和配置
         const data = {
             labels: labels,
             datasets: [{
@@ -52,11 +87,11 @@
             data: data,
             options: {
                 responsive: true,
-		plugins: {
-		    legend: {
-			display: false
-		    }
-		},
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
                 scales: {
                     x: {
                         title: {
@@ -78,7 +113,7 @@
             }
         };
 
-        // Render the chart
+        // 渲染图表
         if (labels.length > 0 && values.length > 0) {
             const stockChart = new Chart(
                 document.getElementById('stockChart'),
@@ -89,3 +124,4 @@
 </body>
 
 </html>
+
