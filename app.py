@@ -38,9 +38,9 @@ def get_stock_data_with_name(file_path, symbol, start_date, end_date):
 
     date = session.get('datetime')
     formatted_date = datetime.strptime(date, '%Y%m%d').strftime('%Y-%m-%d')
-    print(formatted_date)
+    # print(formatted_date)
     session['cost_or_price'] = filtered_data[filtered_data['date'] == formatted_date]['close'].iloc[0]
-    print(1)
+    # print(1)
     return filtered_data
 
 
@@ -92,7 +92,7 @@ def first_day():
     profit_num = [(price-cost)*quantity for price, cost, quantity in zip(stock_price, average_initial_cost, stock_quantity)]
     profit_per = [(price-cost)/cost for price, cost in zip(stock_price, average_initial_cost)]
     
-    print(stock_value)
+    # print(stock_value)
 
     total_stock_value = sum(x * y for x, y in zip(stock_quantity, average_initial_cost))
     total_asset = cash + total_stock_value
@@ -184,9 +184,10 @@ def buy_or_sell():
 
     try:
         if not number:
-            return render_template("error.html", 
+            return render_template("error_back_to_day.html", 
                 error_code="error code: 400", 
-                error_message="Number is required",)
+                error_message="Number is required",
+                return_url = day_page)
             
         if action == "buy":
             
@@ -196,10 +197,10 @@ def buy_or_sell():
                     message = f"Bought {number} shares",
                     return_url = day_page,)
             else:
-                return render_template("error.html", 
+                return render_template("error_back_to_day.html", 
                 error_code="error code: 400", 
                 error_message="You don't have enough money",
-                   return_url = day_page,)
+                return_url = day_page,)
             
         elif action == "sell":
             if check_sell(para):
@@ -214,9 +215,41 @@ def buy_or_sell():
                 return_url = day_page,)
                 
     except Exception as e:
-        return render_template("error.html", 
+        return render_template("error_back_to_day.html", 
             error_code="error code: 500", 
-            error_message=str(e))
+            error_message=str(e),
+            return_url = day_page)
+    
+    # if not number:
+    #         return render_template("error.html", 
+    #             error_code="error code: 400", 
+    #             error_message="Number is required",)
+            
+    # if action == "buy":
+        
+    #     if check_buy(para):
+    #         update_info(para)
+    #         return render_template("result.html", 
+    #             message = f"Bought {number} shares",
+    #             return_url = day_page,)
+    #     else:
+    #         return render_template("error.html", 
+    #         error_code="error code: 400", 
+    #         error_message="You don't have enough money",
+    #         return_url = day_page,)
+        
+    # elif action == "sell":
+    #     if check_sell(para):
+    #         update_info(para)
+    #         return render_template("result.html", 
+    #             message = f"Sold {number} shares",
+    #             return_url = day_page,)
+    #     else:
+    #         return render_template("error_back_to_day.html", 
+    #         error_code="error code: 400", 
+    #         error_message="You don't have enough stocks",
+    #         return_url = day_page,)
+    
 
 
 
