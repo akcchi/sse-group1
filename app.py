@@ -34,8 +34,9 @@ def get_stock_data_with_name(file_path, symbol, start_date, end_date):
 
     date = session.get('datetime')
     formatted_date = datetime.strptime(date, '%Y%m%d').strftime('%Y-%m-%d')
+    print(formatted_date)
     session['cost_or_price'] = filtered_data[filtered_data['date'] == formatted_date]['close'].iloc[0]
-        
+    print(1)
     return filtered_data
 
 
@@ -61,7 +62,7 @@ def lets_play_a_game():
 
 @app.route("/first_day")
 def first_day():
-    session['datetime'] = "20220102"
+    session['datetime'] = "20220103"
     cash = session.get('cash')
     increase = session.get('increase')
     stock_name = session.get('stock_name')
