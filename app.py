@@ -132,7 +132,7 @@ def search():
     end_date = current_date.strftime("%Y-%m-%d")
     start_date = one_year_ago.strftime("%Y-%m-%d")
 
-    if date == "2022-01-02":
+    if date == "2022-01-03":
         session['day_page'] = "/first_day"
 
     day_page = session.get('day_page')
