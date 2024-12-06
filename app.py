@@ -5,6 +5,10 @@ import akshare as ak
 import yfinance as yf
 from datetime import datetime, timedelta
 
+from database import database
+
+from functions.functions import check_buy, check_sell, update_info
+
 def get_stock_data_with_name(file_path, symbol, start_date, end_date):
     stock_name_data = pd.read_csv(file_path, encoding="latin1")
     company_name = stock_name_data.loc[stock_name_data['symbol'] == symbol, 'name'].values
@@ -29,8 +33,8 @@ def get_stock_data_with_name(file_path, symbol, start_date, end_date):
     filtered_data['code'] = symbol
     filtered_data['name'] = company_name
     filtered_data = filtered_data[['name', 'code', 'date', 'close']]
-    session['stock_code'] = symbol
-    session['stock_name'] = company_name
+    session['stock_code1'] = symbol
+    session['stock_name1'] = company_name
 
     date = session.get('datetime')
     formatted_date = datetime.strptime(date, '%Y%m%d').strftime('%Y-%m-%d')
@@ -43,6 +47,19 @@ def get_stock_data_with_name(file_path, symbol, start_date, end_date):
 app = Flask(__name__,
             static_url_path='/assets',
             static_folder='static/assets')
+
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tables.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Set up extensions
+database.init_app(app)
+
+# Register cli commands
+from cli import create_all, drop_all, populate
+with app.app_context():
+    app.cli.add_command(create_all)
+    app.cli.add_command(drop_all)
+    app.cli.add_command(populate)
 
 app.secret_key = 'aslkghioahgoahkvh'
 
@@ -159,10 +176,10 @@ def buy_or_sell():
 
     para = {}
     para['datetime'] = session.get('datetime')
-    para['stock_name'] = session.get('stock_name')
-    para['stock_code'] = session.get('stock_code')
+    para['stock_name'] = session.get('stock_name1')
+    para['stock_code'] = session.get('stock_code1')
     para['action'] = action
-    para['quantity'] = number
+    para['quantity'] = int(number)
     para['cost_or_price'] = session.get('cost_or_price')
 
     try:
@@ -173,25 +190,20 @@ def buy_or_sell():
             
         if action == "buy":
             
-            # if True: ##check_buy()
-            #     # update_info()
-            #     print(previous_page)
-            #     return render_template("result.html", 
-            #         message = f"Bought {number} shares",
-            #         return_url = day_page,)
-            # else:
-            #     return render_template("error.html", 
-            #     error_code="error code: 400", 
-            #     error_message="You don't have enough money",
-            #        return_url = day_page,)
-            return render_template("error_back_to_day.html", 
-            error_code="error code: 400", 
-            error_message="You don't have enough money",
-            return_url = day_page,)
+            if check_buy(para):
+                update_info(para)
+                return render_template("result.html", 
+                    message = f"Bought {number} shares",
+                    return_url = day_page,)
+            else:
+                return render_template("error.html", 
+                error_code="error code: 400", 
+                error_message="You don't have enough money",
+                   return_url = day_page,)
             
         elif action == "sell":
-            if True: ## check_sell()
-                # update_info()
+            if check_sell(para):
+                update_info(para)
                 return render_template("result.html", 
                     message = f"Sold {number} shares",
                     return_url = day_page,)
@@ -208,5 +220,5 @@ def buy_or_sell():
 
 
 
-# if __name__ == '__main__':
-#     app.run(debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
