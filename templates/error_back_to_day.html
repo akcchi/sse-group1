@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Error</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Articles-Badges-images.css') }}">
+</head>
+
+<body>
+    <section class="py-4 py-xl-5">
+        <div class="container">
+            <div class="text-center p-4 p-lg-5">
+                <h1 class="fw-bold mb-4">{{ error_code }}</h1>
+                <p>{{ error_message }}</p> <button class="btn btn-primary fs-5 me-2 py-2 px-4" type="button"><a style="color: white; text-decoration: none;" href="{{ return_url }}">Go back</a></button>
+            </div>
+        </div>
+    </section>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+</body>
+
+</html>

@@ -18,7 +18,7 @@
                 <h1><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none">
                         <path d="M17.6569 11.2929L16.2427 12.7071L12 8.46444L7.75735 12.7071L6.34314 11.2929L12 5.63605L17.6569 11.2929Z" fill="currentColor"></path>
                         <path d="M17.6569 16.9497L16.2427 18.3639L12 14.1213L7.75735 18.364L6.34314 16.9498L12 11.2929L17.6569 16.9497Z" fill="currentColor"></path>
-                    </svg>{{ increase }}</h1>
+                    </svg>{{ increase }}%</h1>
             </div>
         </div>
         <div class="text-center text-white-50 bg-primary border rounded border-0 p-3">
@@ -28,11 +28,11 @@
                     <p>Total Asset</p>
                 </div>
                 <div class="col">
-                    <h1><span style="color: rgba(252, 251, 251, 0.5);">{{ Cash }}</span></h1>
+                    <h1><span style="color: rgba(252, 251, 251, 0.5);">{{ cash }}</span></h1>
                     <p>Cash</p>
                 </div>
                 <div class="col">
-                    <h1>{{ stock_value }}</h1>
+                    <h1>{{ total_stock_value }}</h1>
                     <p>Stock Value</p>
                 </div>
             </div>
@@ -42,22 +42,22 @@
                 <thead>
                     <tr>
                         <th>Stock Name</th>
-                        <th><br>Value/Shares</th>
+                        <th><br>Value/quantity</th>
                         <th><br><strong>Price/Cost</strong></th>
                         <th><br><strong>Profit/Loss</strong></th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for name, code, value, quantity, price, cost, profit_n, profit_p in 
+                        zip(stock_name, stock_code, stock_value, stock_quantity, stock_price,
+                        average_initial_cost, profit_num, profit_per) %}
                     <tr>
-                        <td>Stock Name<p>Code</p>
-                        </td>
-                        <td>Total Value<p>No. shares</p>
-                        </td>
-                        <td>Current Price<p>Initial Cost</p>
-                        </td>
-                        <td>Profit (absolute number)<p>Profit (percentage)</p>
-                        </td>
+                        <td>{{ name }}<p>{{ code }}</p></td>
+                        <td>{{ value }}<p>{{ quantity }}</p></td>
+                        <td>{{ price }}<p>{{ cost }}</p></td>
+                        <td>{{ profit_n }}<p>{{ profit_p }}</p></td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

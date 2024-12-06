@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, session
+from itertools import zip_longest
 import pandas as pd
 import akshare as ak
 import yfinance as yf
@@ -28,6 +29,13 @@ def get_stock_data_with_name(file_path, symbol, start_date, end_date):
     filtered_data['code'] = symbol
     filtered_data['name'] = company_name
     filtered_data = filtered_data[['name', 'code', 'date', 'close']]
+    session['stock_code'] = symbol
+    session['stock_name'] = company_name
+
+    date = session.get('datetime')
+    formatted_date = datetime.strptime(date, '%Y%m%d').strftime('%Y-%m-%d')
+    session['cost_or_price'] = filtered_data[filtered_data['date'] == formatted_date]['close'].iloc[0]
+        
     return filtered_data
 
 
@@ -40,9 +48,11 @@ app.secret_key = 'aslkghioahgoahkvh'
 @app.before_request
 def before_request():
     session['cash'] = 50000
+    session['increase'] = 0
     session['stock_name'] = []
     session['stock_code'] = []
     session['stock_quantity'] = []
+    session['price'] = []
     session['average_initial_cost'] = []
 
 @app.route("/")
@@ -51,12 +61,39 @@ def lets_play_a_game():
 
 @app.route("/first_day")
 def first_day():
+    session['datetime'] = "20220102"
     cash = session.get('cash')
+    increase = session.get('increase')
     stock_name = session.get('stock_name')
     stock_code = session.get('stock_code')
     stock_quantity = session.get('stock_quantity')
+    stock_price = session.get('price')
     average_initial_cost = session.get('average_initial_cost')
-    return render_template("first_day.html",)
+
+    stock_value = [price*quantity for price, quantity in zip(stock_price, stock_quantity)]
+    profit_num = [(price-cost)*quantity for price, cost, quantity in zip(stock_price, average_initial_cost, stock_quantity)]
+    profit_per = [(price-cost)/cost for price, cost in zip(stock_price, average_initial_cost)]
+    
+    print(stock_value)
+
+    total_stock_value = sum(x * y for x, y in zip(stock_quantity, average_initial_cost))
+    total_asset = cash + total_stock_value
+
+    return render_template("first_day.html",
+                           total_asset = total_asset,
+                           cash = cash,
+                           total_stock_value = total_stock_value,
+                           increase = increase,
+                           stock_name = stock_name,
+                           stock_code = stock_code,
+                           stock_value = stock_value,
+                           stock_quantity = stock_quantity,
+                           stock_price = stock_price,
+                           average_initial_cost = average_initial_cost,
+                           profit_num = profit_num,
+                           profit_per = profit_per,
+                           zip = zip,
+                           )
 
 @app.route("/middle_day")
 def middle_day():
@@ -78,22 +115,22 @@ def search():
     start_date = one_year_ago.strftime("%Y-%m-%d")
 
     if date == "2022-01-02":
-        session['previous_page'] = "/first_day"
+        session['day_page'] = "/first_day"
 
-    previous_page = session.get('previous_page')
+    day_page = session.get('day_page')
 
     stock_data = get_stock_data_with_name(file_path, symbol, start_date, end_date)
 
     if isinstance(stock_data, int):
         if stock_data == 1:
             return render_template('error.html',
-                                error_code = 400,
+                                error_code = "error code: 400",
                                 error_message = "There is no such code in the US stock market.",
                                 # return_url = previous_page
                                 )
         elif stock_data == 2:
             return render_template('error.html',
-                                error_code = 404,
+                                error_code = "error code: 404",
                                 error_message = "Sorry, we don't find price of this stock.",
                                 # return_url = previous_page
                                 )
@@ -101,6 +138,7 @@ def search():
         labels = stock_data['date'].dt.strftime('%Y-%m-%d').tolist()
         values = stock_data['close'].tolist()
         company_name = stock_data['name'].iloc[0]  # Get company name
+        session['stock_code'] = symbol
 
     return render_template(
         'chartjs-example.html',
@@ -108,50 +146,64 @@ def search():
         values=values,
         symbol=symbol,
         company_name=company_name,
-        return_url = previous_page,
+        return_url = day_page,
     )
 
 @app.route("/buy_or_sell", methods=['GET'])
 def buy_or_sell():
     number = request.args.get("number")
+    # price = 
     action = request.args.get("action")
-    previous_page = session.get('previous_page')
+    day_page = session.get('day_page')
+
+    para = {}
+    para['datetime'] = session.get('datetime')
+    para['stock_name'] = session.get['stock_name']
+    para['stock_code'] = session.get['stock_code']
+    para['action'] = action
+    para['quantity'] = number
+    para['cost_or_price'] = session.get['cost_or_price']
+
 
     try:
         if not number:
             return render_template("error.html", 
-                error_code="400", 
+                error_code="error code: 400", 
                 error_message="Number is required",)
             
         if action == "buy":
+            
             # if True: ##check_buy()
             #     # update_info()
             #     print(previous_page)
             #     return render_template("result.html", 
             #         message = f"Bought {number} shares",
-            #         return_url = previous_page,)
+            #         return_url = day_page,)
             # else:
             #     return render_template("error.html", 
-            #     error_code="400", 
-            #     error_message="You don't have enough money",)
-            return render_template("error.html", 
-            error_code="400", 
-            error_message="You don't have enough money",)
+            #     error_code="error code: 400", 
+            #     error_message="You don't have enough money",
+            #        return_url = day_page,)
+            return render_template("error_back_to_day.html", 
+            error_code="", 
+            error_message="You don't have enough money",
+            return_url = day_page,)
             
         elif action == "sell":
             if True: ## check_sell()
                 # update_info()
                 return render_template("result.html", 
                     message = f"Sold {number} shares",
-                    return_url = previous_page,)
+                    return_url = day_page,)
             else:
-                return render_template("error.html", 
-                error_code="400", 
-                error_message="You don't have enough stocks",)
+                return render_template("error_back_to_day.html", 
+                error_code="error code: 400", 
+                error_message="You don't have enough stocks",
+                return_url = day_page,)
                 
     except Exception as e:
         return render_template("error.html", 
-            error_code="500", 
+            error_code="error code: 500", 
             error_message=str(e))
 
 
