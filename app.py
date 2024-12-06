@@ -159,12 +159,11 @@ def buy_or_sell():
 
     para = {}
     para['datetime'] = session.get('datetime')
-    para['stock_name'] = session.get['stock_name']
-    para['stock_code'] = session.get['stock_code']
+    para['stock_name'] = session.get('stock_name')
+    para['stock_code'] = session.get('stock_code')
     para['action'] = action
     para['quantity'] = number
-    para['cost_or_price'] = session.get['cost_or_price']
-
+    para['cost_or_price'] = session.get('cost_or_price')
 
     try:
         if not number:
@@ -186,7 +185,7 @@ def buy_or_sell():
             #     error_message="You don't have enough money",
             #        return_url = day_page,)
             return render_template("error_back_to_day.html", 
-            error_code="", 
+            error_code="error code: 400", 
             error_message="You don't have enough money",
             return_url = day_page,)
             
