@@ -144,8 +144,8 @@ def update_info(dict):
         running_quantcost = float(0)
         running_quant = float(0)
         for t in existing_transactions:
-            running_quantcost += (t.quantity * t.cost_or_price)
-            running_quant += t.quantity
+            running_quantcost += (t[0].quantity * t[0].cost_or_price)
+            running_quant += t[0].quantity
 
         return_list.append(new_cash)
         return_list.append(new_stock_value)
@@ -277,12 +277,12 @@ def update_all(arg_list):
     # Update Asset table and generate info for assets_values_list[]
     new_stock_value = float(0)
 
-    codes = arg_list.keys()
+    codes = list(arg_list.keys())
     for code in codes:
         # Get owned quantity
         owned_stock = db.session.execute(
             db.select(Stock).filter_by(stock_code=code)).first()
-        new_stock_value += float(owned_stock.quantity) * arg_list[code]
+        new_stock_value += float(owned_stock[0].quantity) * arg_list[code]
 
     assets = db.session.execute(db.select(Asset)).scalar_one()
     current_cash = assets.cash
@@ -310,12 +310,12 @@ def update_all(arg_list):
         owned = db.session.execute(
             db.select(Stock).filter_by(stock_code=code)).first()
         
-        new_indv_total_value = float(owned.quantity) * arg_list[code]
+        new_indv_total_value = float(owned[0].quantity) * arg_list[code]
 
-        temp_dict.update({"stock_name": owned.stock_name})
+        temp_dict.update({"stock_name": owned[0].stock_name})
         temp_dict.update({"stock_code": code})
         temp_dict.update({"total_value": new_indv_total_value})
-        temp_dict.update({"quantity": owned.quantity})
+        temp_dict.update({"quantity": owned[0].quantity})
         temp_dict.update({"price": arg_list[code]})
         
         # Calc avg initial cost using Transaction table
@@ -326,8 +326,8 @@ def update_all(arg_list):
         running_quantcost = float(0)
         running_quant = float(0)
         for t in existing_transactions:
-            running_quantcost += (t.quantity * t.cost_or_price)
-            running_quant += t.quantity
+            running_quantcost += (t[0].quantity * t[0].cost_or_price)
+            running_quant += t[0].quantity
         avg_initial_cost = running_quantcost/running_quant
 
         temp_dict.update({"cost": avg_initial_cost})

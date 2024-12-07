@@ -51,7 +51,7 @@ def update():
     for code in stock_codes:
         stock_data = ak.stock_us_daily(symbol=code, adjust="qfq")
         price = stock_data[stock_data['date'] == date]['close'].iloc[0]
-        new_stock_price['code'] = price
+        new_stock_price[code] = price
         new_stock_price1.append(price)
     
     session['price'] = new_stock_price1
