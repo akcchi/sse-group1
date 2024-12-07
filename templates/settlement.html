@@ -5,19 +5,45 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>Settlement</title>
-    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/Articles-Badges-images.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Articles-Badges-images.css') }}">
 </head>
 
 <body>
     <section class="py-4 py-xl-5">
-        <div class="container">
-            <div class="text-center p-4 p-lg-5">
+        <div class="text-center p-4 p-lg-5">
+            {% if earning >= 10000 %}
                 <p>Congratulation! You earned</p>
-                <h1 class="fw-bold mb-4">10000</h1>
-            </div>
+                <h1 class="fw-bold mb-4" style="color: greenyellow">{{ earning | round(2) }}</h1>
+                <p>You must be the next Warren Buffett!</p>
+            {% elif earning > 0 and earning < 10000 %}
+                <p>Congratulation! You earned</p>
+                <h1 class="fw-bold mb-4" style="color: greenyellow">{{ earning | round(2) }}</h1>
+                <p>Well done!</p>
+            {% elif earning < -25000 %}
+                <p>Sorry! You lost</p>
+                <h1 class="fw-bold mb-4" style="color: red">{{ -1 * earning | round(2) }}</h1>
+                <p>You need a financial advisor!</p>
+            {% else %}
+                <p>Sorry! You lost</p>
+                <h1 class="fw-bold mb-4" style="color: red">{{ -1 * earning | round(2) }}</h1>
+                <p>Keep trying!</p>
+            {% endif %}
         </div>
+        <button class="btn btn-primary" type="button" style="margin-top: 17px;"><a style="color: white; text-decoration: none;" href="index">Try Again</a></button>
     </section>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        {% if earning > 0 %}
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        {% endif %}
+    </script> -->
     <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 </body>
 

@@ -31,6 +31,13 @@ def get_stock_data_with_name(file_path, symbol, start_date, end_date):
         except:
             return 2 ## no data 
 
+    try:
+        date = session.get('datetime')
+        formatted_date = datetime.strptime(date, '%Y%m%d').strftime('%Y-%m-%d')
+        session['cost_or_price'] = filtered_data[filtered_data['date'] == formatted_date]['close'].iloc[0]
+    except:
+        return 2
+    
     filtered_data['code'] = symbol
     filtered_data['name'] = company_name
     filtered_data = filtered_data[['name', 'code', 'date', 'close']]
@@ -38,9 +45,6 @@ def get_stock_data_with_name(file_path, symbol, start_date, end_date):
     session['stock_code'] = symbol
     session['stock_name'] = company_name
 
-    date = session.get('datetime')
-    formatted_date = datetime.strptime(date, '%Y%m%d').strftime('%Y-%m-%d')
-    session['cost_or_price'] = filtered_data[filtered_data['date'] == formatted_date]['close'].iloc[0]
     return filtered_data
 
 def update():
@@ -81,7 +85,6 @@ with app.app_context():
 @app.before_request
 def initialize_sessions():
     if not session.get('initialized'):
-        session.clear()
         session['initialized'] = True
         session['cash'] = 50000
         session['total_stock_value'] = 0
@@ -93,7 +96,9 @@ def initialize_sessions():
         session['average_initial_cost'] = []
 
 @app.route("/")
+@app.route("/index")
 def lets_play_a_game():
+    session.clear()
     return render_template("index.html")
 
 @app.route("/first_day")
@@ -214,6 +219,15 @@ def last_day():
                            profit_per = profit_per,
                            zip = zip,
                            )
+
+@app.route("/settlement")
+def settlement():
+    cash = session.get('cash')
+    total_stock_value = session.get('total_stock_value')
+    total_asset = cash + total_stock_value
+    earning = total_asset - 50000.0
+    return render_template("settlement.html",
+                           earning = earning)
 
 @app.route("/search", methods=["POST"])
 def search():
