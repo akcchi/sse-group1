@@ -24,15 +24,15 @@
         <div class="text-center text-white-50 bg-primary border rounded border-0 p-3">
             <div class="row">
                 <div class="col">
-                    <h1><span style="color: rgba(252, 251, 251, 0.5);">{{ total_asset }}</span></h1>
+                    <h1><span style="color: rgba(252, 251, 251, 0.5);">{{ total_asset | round(2) }}</span></h1>
                     <p>Total Asset</p>
                 </div>
                 <div class="col">
-                    <h1><span style="color: rgba(252, 251, 251, 0.5);">{{ cash }}</span></h1>
+                    <h1><span style="color: rgba(252, 251, 251, 0.5);">{{ cash | round(2) }}</span></h1>
                     <p>Cash</p>
                 </div>
                 <div class="col">
-                    <h1>{{ total_stock_value }}</h1>
+                    <h1><span style="color: rgba(252, 251, 251, 0.5);">{{ total_stock_value | round(2) }}</span></h1>
                     <p>Stock Value</p>
                 </div>
             </div>
@@ -48,16 +48,20 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% if stock_name and stock_code and stock_value and stock_quantity %}
                     {% for name, code, value, quantity, price, cost, profit_n, profit_p in 
                         zip(stock_name, stock_code, stock_value, stock_quantity, stock_price,
                         average_initial_cost, profit_num, profit_per) %}
                     <tr>
-                        <td>{{ name }}<p>{{ code }}</p></td>
-                        <td>{{ value }}<p>{{ quantity }}</p></td>
-                        <td>{{ price }}<p>{{ cost }}</p></td>
-                        <td>{{ profit_n }}<p>{{ profit_p }}</p></td>
+                        <td>{{ name or 'N/A' }}<p>{{ code or 'N/A' }}</p></td>
+                        <td>{{ value | round(2) }}<p>{{ quantity or 0 }}</p></td>
+                        <td>{{ price | round(2) }}<p>{{ cost | round(2) }}</p></td>
+                        <td>{{ profit_n | round(2) }}<p>{{ (profit_p * 100) | round(2) }}%</p></td>
                     </tr>
                     {% endfor %}
+                {% else %}
+                    <tr><td colspan="4">No stocks available</td></tr>
+                {% endif %}
                 </tbody>
             </table>
         </div>
@@ -68,7 +72,7 @@
                 <div class="col"><button class="btn btn-primary d-xl-flex" type="submit" style="margin-top: 3px;">Search</button></div>
             </form>
         </div>
-        <button class="btn btn-primary" type="button" style="margin-top: 17px;"><a style="color: white; text-decoration: none;" href="middle_day.html">Start</a></button>
+        <button class="btn btn-primary" type="button" style="margin-top: 17px;"><a style="color: white; text-decoration: none;" href="middle_day">Start</a></button>
     </div>
     <script src="assets/bootstrap/js/bootstrap.min.js"></script>
     <!-- <script>
