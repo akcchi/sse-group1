@@ -1,7 +1,7 @@
 from database import database as db
 from models.tables import Transaction, Asset, Stock
 
-#from sqlalchemy import select
+# from sqlalchemy import select
 
 
 # Check that there is enough cash to buy
@@ -18,14 +18,13 @@ from models.tables import Transaction, Asset, Stock
 #
 def check_buy(dict):
     total_cost = float(dict["quantity"]) * dict["cost_or_price"]
-    
-    assets = db.session.execute(db.select(Asset)).scalar_one()
-    
-    if (assets.cash - total_cost) >= 0:
-        return(True)
-    else:
-        return(False)
 
+    assets = db.session.execute(db.select(Asset)).scalar_one()
+
+    if (assets.cash - total_cost) >= 0:
+        return True
+    else:
+        return False
 
 
 # Check that sell quantity is <= existing owned
@@ -42,16 +41,17 @@ def check_buy(dict):
 #
 def check_sell(dict):
     owned = db.session.execute(
-        db.select(Stock).filter_by(stock_code=dict["stock_code"])).first()
+        db.select(Stock).filter_by(stock_code=dict["stock_code"])
+    ).first()
 
     if owned is not None:
-        #owned_quantity = owned.quantity
+        # owned_quantity = owned.quantity
         if dict["quantity"] <= owned[0].quantity:
-            return(True)
+            return True
         else:
-            return(False)
+            return False
     else:
-        return(False)
+        return False
 
 
 # Update database tables (Stock, Asset, Transaction)
@@ -80,8 +80,9 @@ def update_info(dict):
 
     # See if stock is already owned
     owned_stock = db.session.execute(
-        db.select(Stock).filter_by(stock_code=dict["stock_code"])).first()
-    
+        db.select(Stock).filter_by(stock_code=dict["stock_code"])
+    ).first()
+
     if owned_stock is not None:  # Already own this stock
         # Update Stock table
         new_quantity = int()
@@ -104,7 +105,7 @@ def update_info(dict):
                     stock_name=dict["stock_name"],
                     action="buy",
                     quantity=dict["quantity"],
-                    cost_or_price=dict["cost_or_price"]
+                    cost_or_price=dict["cost_or_price"],
                 )
             )
             db.session.commit()
@@ -116,7 +117,7 @@ def update_info(dict):
                     stock_name=dict["stock_name"],
                     action="sell",
                     quantity=dict["quantity"],
-                    cost_or_price=dict["cost_or_price"]
+                    cost_or_price=dict["cost_or_price"],
                 )
             )
             db.session.commit()
@@ -136,15 +137,16 @@ def update_info(dict):
         db.session.commit()
 
         # Calculate average initial cost
-        existing_transactions =  db.session.execute(
+        existing_transactions = db.session.execute(
             db.select(Transaction).filter_by(
-                stock_code=dict["stock_code"],
-                action="buy")).all()  #.scalars()
-        
+                stock_code=dict["stock_code"], action="buy"
+            )
+        ).all()  # .scalars()
+
         running_quantcost = float(0)
         running_quant = float(0)
         for t in existing_transactions:
-            running_quantcost += (t[0].quantity * t[0].cost_or_price)
+            running_quantcost += t[0].quantity * t[0].cost_or_price
             running_quant += t[0].quantity
 
         return_list.append(new_cash)
@@ -152,7 +154,7 @@ def update_info(dict):
         return_list.append(dict["stock_name"])
         return_list.append(dict["stock_code"])
         return_list.append(new_quantity)
-        return_list.append(running_quantcost/running_quant)  # avg initial cost
+        return_list.append(running_quantcost / running_quant)  # avg initial cost
 
     else:  # no existing stock owned
         # Only reachable if "buy"; add new row in Stocks table
@@ -160,7 +162,7 @@ def update_info(dict):
             Stock(
                 stock_code=dict["stock_code"],
                 stock_name=dict["stock_name"],
-                quantity=dict["quantity"]
+                quantity=dict["quantity"],
             )
         )
         db.session.commit()
@@ -188,7 +190,7 @@ def update_info(dict):
                     stock_name=dict["stock_name"],
                     action="buy",
                     quantity=dict["quantity"],
-                    cost_or_price=dict["cost_or_price"]
+                    cost_or_price=dict["cost_or_price"],
                 )
             )
             db.session.commit()
@@ -200,7 +202,7 @@ def update_info(dict):
                     stock_name=dict["stock_name"],
                     action="sell",
                     quantity=dict["quantity"],
-                    cost_or_price=dict["cost_or_price"]
+                    cost_or_price=dict["cost_or_price"],
                 )
             )
             db.session.commit()
@@ -211,9 +213,9 @@ def update_info(dict):
         return_list.append(dict["stock_code"])
         return_list.append(dict["quantity"])
         return_list.append(dict["cost_or_price"])
-    
-    print(return_list)    
-    return(return_list)
+
+    print(return_list)
+    return return_list
 
 
 # Get values for current assets
@@ -230,7 +232,7 @@ def get_assets():
     return_list.append(assets.stock_value)
     return_list.append(total_assets)
 
-    return(return_list)
+    return return_list
 
 
 # Return a LIST containing:
@@ -240,7 +242,7 @@ def get_owned_stocks():
     all_stocks = db.session.execute(db.select(Stock)).all()
     for s in all_stocks:
         return_list.append(s.stock_code)
-    return(return_list)
+    return return_list
 
 
 # Update Asset table with new stock prices (new day)
@@ -252,7 +254,7 @@ def get_owned_stocks():
 #   stock_code: new_price (float)
 #
 # Returns: one LIST, containing two LISTS
-# [0]: LIST size 3, containing 
+# [0]: LIST size 3, containing
 #   [0]: (float) updated total stock value
 #   [1]: (float) updated total assets
 #   [2]: (float) percentage change in total assets <-- show top of page!
@@ -281,20 +283,21 @@ def update_all(arg_list):
     for code in codes:
         # Get owned quantity
         owned_stock = db.session.execute(
-            db.select(Stock).filter_by(stock_code=code)).first()
+            db.select(Stock).filter_by(stock_code=code)
+        ).first()
         new_stock_value += float(owned_stock[0].quantity) * arg_list[code]
 
     assets = db.session.execute(db.select(Asset)).scalar_one()
     current_cash = assets.cash
     old_stock_value = assets.stock_value
-    
+
     assets.stock_value = new_stock_value
     db.session.commit()  # Update Asset table
 
     old_total_assets = old_stock_value + current_cash
     new_total_assets = new_stock_value + current_cash
     total_percent_change = 100 * (
-        (new_total_assets - old_total_assets)/old_total_assets
+        (new_total_assets - old_total_assets) / old_total_assets
     )
 
     assets_values_list.append(new_stock_value)
@@ -307,9 +310,8 @@ def update_all(arg_list):
     # Query Stock table
     for code in codes:
         temp_dict = {}
-        owned = db.session.execute(
-            db.select(Stock).filter_by(stock_code=code)).first()
-        
+        owned = db.session.execute(db.select(Stock).filter_by(stock_code=code)).first()
+
         new_indv_total_value = float(owned[0].quantity) * arg_list[code]
 
         temp_dict.update({"stock_name": owned[0].stock_name})
@@ -317,37 +319,35 @@ def update_all(arg_list):
         temp_dict.update({"total_value": new_indv_total_value})
         temp_dict.update({"quantity": owned[0].quantity})
         temp_dict.update({"price": arg_list[code]})
-        
+
         # Calc avg initial cost using Transaction table
-        existing_transactions =  db.session.execute(
-            db.select(Transaction).filter_by(
-                stock_code=code,
-                action="buy")).all()  #.scalars()
+        existing_transactions = db.session.execute(
+            db.select(Transaction).filter_by(stock_code=code, action="buy")
+        ).all()  # .scalars()
         running_quantcost = float(0)
         running_quant = float(0)
         for t in existing_transactions:
-            running_quantcost += (t[0].quantity * t[0].cost_or_price)
+            running_quantcost += t[0].quantity * t[0].cost_or_price
             running_quant += t[0].quantity
-        avg_initial_cost = running_quantcost/running_quant
+        avg_initial_cost = running_quantcost / running_quant
 
         temp_dict.update({"cost": avg_initial_cost})
 
         old_indv_total_value = avg_initial_cost * float(temp_dict["quantity"])
 
-        temp_dict.update(
-            {"pnl_raw": new_indv_total_value - old_indv_total_value})
-        
+        temp_dict.update({"pnl_raw": new_indv_total_value - old_indv_total_value})
+
         pnl_percent = 100 * (
-            (new_indv_total_value - old_indv_total_value)/old_indv_total_value
+            (new_indv_total_value - old_indv_total_value) / old_indv_total_value
         )
 
         temp_dict.update({"pnl_percent": pnl_percent})
 
         owned_stocks_list.append(temp_dict)
-    
+
     master_list.append(owned_stocks_list)
 
-    return(master_list)
+    return master_list
 
 
 # Get information on all previous transactions
@@ -374,5 +374,18 @@ def get_all_transactions():
         temp_dict.update({"quantity": t.quantity})
         temp_dict.update({"cost_or_price": t.cost_or_price})
         master_list.append(temp_dict)
-    
-    return(master_list)
+
+    return master_list
+
+
+# Reset all tables to beginning of game
+def reset_db():
+    db.session.query(Transaction).delete()
+    db.session.commit()
+    db.session.query(Stock).delete()
+    db.session.commit()
+
+    assets = db.session.execute(db.select(Asset)).scalar_one()
+    assets.cash = float(50000)
+    assets.stock_value = float(0)
+    db.session.commit()
