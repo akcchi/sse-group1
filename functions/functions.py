@@ -87,9 +87,12 @@ def update_info(dict):
         new_quantity = int()
         if dict["action"] == "buy":
             new_quantity = owned_stock[0].quantity + dict["quantity"]
+            owned_stock[0].quantity = new_quantity
         elif dict["action"] == "sell":
             new_quantity = owned_stock[0].quantity - dict["quantity"]
-        owned_stock[0].quantity = new_quantity
+            if new_quantity == 0:
+                db.session.delete(owned_stock[0])  # Remove entry if all sold
+            owned_stock[0].quantity = new_quantity
         db.session.commit()
 
         # Add row to Transaction table
