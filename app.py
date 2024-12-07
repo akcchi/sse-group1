@@ -4,10 +4,11 @@ import pandas as pd
 import akshare as ak
 import yfinance as yf
 from datetime import datetime, timedelta
+import os
 
 from database import database
 
-from functions.functions import check_buy, check_sell, update_info
+from functions.functions import check_buy, check_sell, update_info, update_all
 
 def get_stock_data_with_name(file_path, symbol, start_date, end_date):
     stock_name_data = pd.read_csv(file_path, encoding="latin1")
@@ -33,16 +34,31 @@ def get_stock_data_with_name(file_path, symbol, start_date, end_date):
     filtered_data['code'] = symbol
     filtered_data['name'] = company_name
     filtered_data = filtered_data[['name', 'code', 'date', 'close']]
-    session['stock_code1'] = symbol
-    session['stock_name1'] = company_name
+
+    session['stock_code'] = symbol
+    session['stock_name'] = company_name
 
     date = session.get('datetime')
     formatted_date = datetime.strptime(date, '%Y%m%d').strftime('%Y-%m-%d')
-    # print(formatted_date)
     session['cost_or_price'] = filtered_data[filtered_data['date'] == formatted_date]['close'].iloc[0]
-    # print(1)
     return filtered_data
 
+def update():
+    stock_codes = session.get('stock_codes')
+    new_stock_price = {}
+    new_stock_price1 = []
+    date = datetime.strptime(session.get('datetime'), '%Y%m%d').strftime('%Y-%m-%d')
+    for code in stock_codes:
+        stock_data = ak.stock_us_daily(symbol=code, adjust="qfq")
+        price = stock_data[stock_data['date'] == date]['close'].iloc[0]
+        new_stock_price['code'] = price
+        new_stock_price1.append(price)
+    
+    session['price'] = new_stock_price1
+    lt1, lt2 = update_all(new_stock_price)
+    session['total_stock_value'] = lt1[0]
+    session['increase'] = lt1[2]
+    
 
 app = Flask(__name__,
             static_url_path='/assets',
@@ -50,6 +66,7 @@ app = Flask(__name__,
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tables.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.secret_key = os.urandom(24).hex()
 
 # Set up extensions
 database.init_app(app)
@@ -61,40 +78,45 @@ with app.app_context():
     app.cli.add_command(drop_all)
     app.cli.add_command(populate)
 
-app.secret_key = 'aslkghioahgoahkvh'
-
 @app.before_request
-def before_request():
-    session['cash'] = 50000
-    session['increase'] = 0
-    session['stock_name'] = []
-    session['stock_code'] = []
-    session['stock_quantity'] = []
-    session['price'] = []
-    session['average_initial_cost'] = []
+def initialize_sessions():
+    if not session.get('initialized'):
+        session.clear()
+        session['initialized'] = True
+        session['cash'] = 50000
+        session['total_stock_value'] = 0
+        session['increase'] = 0
+        session['stock_names'] = []
+        session['stock_codes'] = []
+        session['stock_quantity'] = []
+        session['price'] = []
+        session['average_initial_cost'] = []
 
 @app.route("/")
 def lets_play_a_game():
     return render_template("index.html")
 
 @app.route("/first_day")
-def first_day():
+def first_day():    
     session['datetime'] = "20220103"
     cash = session.get('cash')
     increase = session.get('increase')
-    stock_name = session.get('stock_name')
-    stock_code = session.get('stock_code')
+    stock_names = session.get('stock_names')
+    stock_codes = session.get('stock_codes')
     stock_quantity = session.get('stock_quantity')
     stock_price = session.get('price')
     average_initial_cost = session.get('average_initial_cost')
 
-    stock_value = [price*quantity for price, quantity in zip(stock_price, stock_quantity)]
-    profit_num = [(price-cost)*quantity for price, cost, quantity in zip(stock_price, average_initial_cost, stock_quantity)]
-    profit_per = [(price-cost)/cost for price, cost in zip(stock_price, average_initial_cost)]
-    
-    # print(stock_value)
+    if (len(stock_price) == len(stock_quantity) == len(average_initial_cost)):
+        stock_value = [price*quantity for price, quantity in zip(stock_price, stock_quantity)]
+        profit_num = [(price-cost)*quantity for price, cost, quantity in zip(stock_price, average_initial_cost, stock_quantity)]
+        profit_per = [(price-cost)/cost for price, cost in zip(stock_price, average_initial_cost)]
+    else:
+        stock_value = []
+        profit_num = []
+        profit_per = []
 
-    total_stock_value = sum(x * y for x, y in zip(stock_quantity, average_initial_cost))
+    total_stock_value = session.get('total_stock_value')
     total_asset = cash + total_stock_value
 
     return render_template("first_day.html",
@@ -102,8 +124,8 @@ def first_day():
                            cash = cash,
                            total_stock_value = total_stock_value,
                            increase = increase,
-                           stock_name = stock_name,
-                           stock_code = stock_code,
+                           stock_name = stock_names,
+                           stock_code = stock_codes,
                            stock_value = stock_value,
                            stock_quantity = stock_quantity,
                            stock_price = stock_price,
@@ -115,7 +137,83 @@ def first_day():
 
 @app.route("/middle_day")
 def middle_day():
-    return render_template("middle_day.html")
+    session['datetime'] = "20220603"
+    update()
+    cash = session.get('cash')
+    increase = session.get('increase')
+    stock_names = session.get('stock_names')
+    stock_codes = session.get('stock_codes')
+    stock_quantity = session.get('stock_quantity')
+    stock_price = session.get('price')
+    average_initial_cost = session.get('average_initial_cost')
+
+    if (len(stock_price) == len(stock_quantity) == len(average_initial_cost)):
+        stock_value = [price*quantity for price, quantity in zip(stock_price, stock_quantity)]
+        profit_num = [(price-cost)*quantity for price, cost, quantity in zip(stock_price, average_initial_cost, stock_quantity)]
+        profit_per = [(price-cost)/cost for price, cost in zip(stock_price, average_initial_cost)]
+    else:
+        stock_value = []
+        profit_num = []
+        profit_per = []
+
+    total_stock_value = session.get('total_stock_value')
+    total_asset = cash + total_stock_value
+
+    return render_template("middle_day.html",
+                           total_asset = total_asset,
+                           cash = cash,
+                           total_stock_value = total_stock_value,
+                           increase = increase,
+                           stock_name = stock_names,
+                           stock_code = stock_codes,
+                           stock_value = stock_value,
+                           stock_quantity = stock_quantity,
+                           stock_price = stock_price,
+                           average_initial_cost = average_initial_cost,
+                           profit_num = profit_num,
+                           profit_per = profit_per,
+                           zip = zip,
+                           )
+
+@app.route("/last_day")
+def last_day():
+    session['datetime'] = "20230103"
+    update()
+    cash = session.get('cash')
+    increase = session.get('increase')
+    stock_names = session.get('stock_names')
+    stock_codes = session.get('stock_codes')
+    stock_quantity = session.get('stock_quantity')
+    stock_price = session.get('price')
+    average_initial_cost = session.get('average_initial_cost')
+
+    if (len(stock_price) == len(stock_quantity) == len(average_initial_cost)):
+        stock_value = [price*quantity for price, quantity in zip(stock_price, stock_quantity)]
+        profit_num = [(price-cost)*quantity for price, cost, quantity in zip(stock_price, average_initial_cost, stock_quantity)]
+        profit_per = [(price-cost)/cost for price, cost in zip(stock_price, average_initial_cost)]
+    else:
+        stock_value = []
+        profit_num = []
+        profit_per = []
+
+    total_stock_value = session.get('total_stock_value')
+    total_asset = cash + total_stock_value
+
+    return render_template("last_day.html",
+                           total_asset = total_asset,
+                           cash = cash,
+                           total_stock_value = total_stock_value,
+                           increase = increase,
+                           stock_name = stock_names,
+                           stock_code = stock_codes,
+                           stock_value = stock_value,
+                           stock_quantity = stock_quantity,
+                           stock_price = stock_price,
+                           average_initial_cost = average_initial_cost,
+                           profit_num = profit_num,
+                           profit_per = profit_per,
+                           zip = zip,
+                           )
 
 @app.route("/search", methods=["POST"])
 def search():
@@ -134,6 +232,8 @@ def search():
 
     if date == "2022-01-03":
         session['day_page'] = "/first_day"
+    elif date == "2022-06-03":
+        session['day_page'] = "/middle_day"
 
     day_page = session.get('day_page')
 
@@ -155,8 +255,7 @@ def search():
     else: 
         labels = stock_data['date'].dt.strftime('%Y-%m-%d').tolist()
         values = stock_data['close'].tolist()
-        company_name = stock_data['name'].iloc[0]  # Get company name
-        session['stock_code'] = symbol
+        company_name = session.get("stock_name")
 
     return render_template(
         'chartjs-example.html',
@@ -167,6 +266,48 @@ def search():
         return_url = day_page,
     )
 
+def update_session(info):
+    ## [46421.8, 3578.2, 'Apple, Inc.', 'AAPL', 20, 178.91]
+    print(info)
+    session['cash'] = info[0]
+    session['total_stock_value'] = info[1]
+
+    stock_names = session.get("stock_names")
+    stock_codes = session.get('stock_codes')
+    stock_quantity = session.get('stock_quantity')
+    prices = session.get('price')
+    average_initial_cost = session.get('average_initial_cost')
+    price = session.get("cost_or_price")
+
+    if info[3] in stock_codes:
+        index = stock_codes.index(info[3])
+        if info[4] != 0:
+            stock_quantity[index] = info[4]
+            average_initial_cost[index] = info[5]
+            prices[index] = price
+        else:
+            stock_names.pop(index)
+            stock_codes.pop(index)
+            stock_quantity.pop(index)
+            prices.pop(index)
+            average_initial_cost.pop(index)
+            
+    else:
+        stock_names.append(info[2])
+        stock_codes.append(info[3])
+        stock_quantity.append(info[4])
+        average_initial_cost.append(info[5])
+        prices.append(price)
+
+    session['stock_names'] = stock_names
+    session['stock_codes'] = stock_codes
+    session['stock_quantity'] = stock_quantity
+    session['price'] = prices
+    session['average_initial_cost'] = average_initial_cost
+
+    print("update successfully")
+    
+
 @app.route("/buy_or_sell", methods=['GET'])
 def buy_or_sell():
     number = request.args.get("number")
@@ -176,8 +317,8 @@ def buy_or_sell():
 
     para = {}
     para['datetime'] = session.get('datetime')
-    para['stock_name'] = session.get('stock_name1')
-    para['stock_code'] = session.get('stock_code1')
+    para['stock_name'] = session.get('stock_name')
+    para['stock_code'] = session.get('stock_code')
     para['action'] = action
     para['quantity'] = int(number)
     para['cost_or_price'] = session.get('cost_or_price')
@@ -192,7 +333,8 @@ def buy_or_sell():
         if action == "buy":
             
             if check_buy(para):
-                update_info(para)
+                info = update_info(para)
+                update_session(info)
                 return render_template("result.html", 
                     message = f"Bought {number} shares",
                     return_url = day_page,)
@@ -204,7 +346,8 @@ def buy_or_sell():
             
         elif action == "sell":
             if check_sell(para):
-                update_info(para)
+                info = update_info(para)
+                update_session(info)
                 return render_template("result.html", 
                     message = f"Sold {number} shares",
                     return_url = day_page,)
@@ -218,37 +361,7 @@ def buy_or_sell():
         return render_template("error_back_to_day.html", 
             error_code="error code: 500", 
             error_message=str(e),
-            return_url = day_page)
-    
-    # if not number:
-    #         return render_template("error.html", 
-    #             error_code="error code: 400", 
-    #             error_message="Number is required",)
-            
-    # if action == "buy":
-        
-    #     if check_buy(para):
-    #         update_info(para)
-    #         return render_template("result.html", 
-    #             message = f"Bought {number} shares",
-    #             return_url = day_page,)
-    #     else:
-    #         return render_template("error.html", 
-    #         error_code="error code: 400", 
-    #         error_message="You don't have enough money",
-    #         return_url = day_page,)
-        
-    # elif action == "sell":
-    #     if check_sell(para):
-    #         update_info(para)
-    #         return render_template("result.html", 
-    #             message = f"Sold {number} shares",
-    #             return_url = day_page,)
-    #     else:
-    #         return render_template("error_back_to_day.html", 
-    #         error_code="error code: 400", 
-    #         error_message="You don't have enough stocks",
-    #         return_url = day_page,)
+            return_url = day_page)    
     
 
 
