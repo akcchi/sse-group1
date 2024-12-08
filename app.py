@@ -237,6 +237,7 @@ def search():
     values = []
     symbol = ""
     company_name = ""
+    latest_price = None
     
     file_path = './blueprints/us_stock_name1.csv'
     symbol = request.form.get("symbol")
@@ -272,6 +273,7 @@ def search():
         labels = stock_data['date'].dt.strftime('%Y-%m-%d').tolist()
         values = stock_data['close'].tolist()
         company_name = session.get("stock_name")
+        latest_price = values[-1] if values else None
 
     return render_template(
         'chartjs-example.html',
@@ -279,6 +281,7 @@ def search():
         values=values,
         symbol=symbol,
         company_name=company_name,
+        latest_price=latest_price,
         return_url = day_page,
     )
 

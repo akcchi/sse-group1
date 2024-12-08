@@ -8,20 +8,19 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* 使用flexbox将内容居中 */
         body {
             margin: 0;
             display: flex;
-            justify-content: center; /* 水平居中 */
-            align-items: center;    /* 垂直居中 */
-            min-height: 100vh;      /* 占满视口高度 */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             font-family: Arial, sans-serif;
-            text-align: center;     /* 文本水平居中 */
+            text-align: center;
         }
 
         .content-container {
-            width: 90%;            /* 宽度占视口90% */
-            max-width: 800px;      /* 最大宽度800px */
+            width: 90%;
+            max-width: 800px;
         }
 
         form {
@@ -30,12 +29,19 @@
 
         .chart-container {
             height: 50vh;
-            width: 100%;           /* 图表宽度自适应容器 */
+            width: 100%;
         }
 
         .btn-primary a {
             color: white;
             text-decoration: none;
+        }
+
+        .latest-price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #000;
+            margin: 20px 0;
         }
     </style>
 </head>
@@ -50,7 +56,10 @@
             <button type="submit" name="action" value="sell" class="btn btn-primary" style="margin-top: 3px;">Sell</button>
         </form>
 
-        <!-- 显示图表 -->
+        {% if latest_price %}
+            <p class="latest-price">Latest Stock Price: ${{ latest_price | round(2) }}</p>
+        {% endif %}
+
         {% if labels and values %}
             <h2>Stock Price Chart for {{ company_name }} ({{ symbol }})</h2>
             <div class="chart-container">
@@ -66,11 +75,9 @@
     </div>
 
     <script>
-        // 使用 Flask 传递的 labels 和 values
         const labels = {{ labels | tojson }};
         const values = {{ values | tojson }};
 
-        // 定义图表数据和配置
         const data = {
             labels: labels,
             datasets: [{
@@ -96,7 +103,7 @@
                     x: {
                         title: {
                             display: true,
-                            text: ''
+                            text: 'Date'
                         },
                         ticks: {
                             maxTicksLimit: 10
@@ -113,7 +120,6 @@
             }
         };
 
-        // 渲染图表
         if (labels.length > 0 && values.length > 0) {
             const stockChart = new Chart(
                 document.getElementById('stockChart'),
