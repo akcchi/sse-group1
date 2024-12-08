@@ -25,6 +25,7 @@ pandas==2.2.3
 peewee==3.17.8
 platformdirs==4.3.6
 py-mini-racer==0.6.0
+pytest==8.3.3
 python-dateutil==2.9.0.post0
 pytz==2024.2
 requests==2.32.3
