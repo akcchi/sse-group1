@@ -8,7 +8,8 @@ import os
 
 from database import database
 
-from functions.functions import check_buy, check_sell, update_info, update_all
+from functions.functions import (check_buy, check_sell, update_info,
+                                 update_all, reset_db)
 
 def get_stock_data_with_name(file_path, symbol, start_date, end_date):
     stock_name_data = pd.read_csv(file_path, encoding="latin1")
@@ -99,6 +100,7 @@ def initialize_sessions():
 @app.route("/index")
 def lets_play_a_game():
     session.clear()
+    reset_db()
     return render_template("index.html")
 
 @app.route("/first_day")
