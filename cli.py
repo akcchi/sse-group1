@@ -2,7 +2,7 @@ import click
 from flask.cli import with_appcontext
 
 from database import database
-from models.tables import Transaction, Asset, Stock
+from models.tables import Asset  # ,Transaction, Stock
 
 
 @click.command("create_all", help="Create all tables in the database")
@@ -33,12 +33,7 @@ def populate():
         # )
     ]
 
-    dummy_assets = [
-        Asset(
-            cash=50000,
-            stock_value=0
-        )
-    ]
+    dummy_assets = [Asset(cash=50000, stock_value=0)]
 
     dummy_stocks = [
         # Stock(
@@ -57,6 +52,4 @@ def populate():
     for row in dummy_stocks:
         database.session.add(row)
 
-
     database.session.commit()
-

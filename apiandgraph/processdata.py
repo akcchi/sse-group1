@@ -12,29 +12,32 @@ for i in range(num_tickers):
     timestamps = []
     prices = []
 
-    num_timestamps = int(input(f"Enter the number of price timestamps for {ticker}: "))
+    num_timestamps = int(
+        input(f"Enter the number of price timestamps for {ticker}: ")
+    )
 
     for j in range(num_timestamps):
-        timestamp = input(f"Enter timestamp {j + 1} (e.g., YYYY-MM-DD 00:00:00): ")
+        timestamp = input(
+            f"Enter timestamp {j + 1} (e.g., YYYY-MM-DD 00:00:00): "
+        )
         price = float(input(f"Enter price at {timestamp}: "))
         timestamps.append(timestamp)
         prices.append(price)
 
-    stock_data.append({
-        "Ticker": ticker,
-        "Amount Bought": amount_bought,
-        "Timestamps": timestamps,
-        "Prices": prices
-    })
+    stock_data.append(
+        {
+            "Ticker": ticker,
+            "Amount Bought": amount_bought,
+            "Timestamps": timestamps,
+            "Prices": prices,
+        }
+    )
 
 total_pnl = 0
 all_dataframes = []
 
 for stock in stock_data:
-    data = {
-        "Timestamp": stock["Timestamps"],
-        "Price": stock["Prices"]
-    }
+    data = {"Timestamp": stock["Timestamps"], "Price": stock["Prices"]}
     df = pd.DataFrame(data)
 
     # Convert Timestamp to datetime
@@ -44,7 +47,9 @@ for stock in stock_data:
     df["PnL"] = df["Price"].diff() * stock["Amount Bought"]
 
     # Calculate percentage PnL relative to the previous price
-    df["PnL (%)"] = (df["PnL"] / (df["Price"].shift(1) * stock["Amount Bought"])) * 100
+    df["PnL (%)"] = (
+        df["PnL"] / (df["Price"].shift(1) * stock["Amount Bought"])
+    ) * 100
 
     # Display results for the ticker
     print(f"\nPnL for Ticker: {stock['Ticker']}")

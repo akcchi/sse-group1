@@ -22,4 +22,3 @@ class Stock(db.Model):
     stock_code = db.Column(db.String, nullable=False)
     stock_name = db.Column(db.String, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
-

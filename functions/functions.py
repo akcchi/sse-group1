@@ -154,7 +154,9 @@ def update_info(dict):
         return_list.append(dict["stock_name"])
         return_list.append(dict["stock_code"])
         return_list.append(new_quantity)
-        return_list.append(running_quantcost / running_quant)  # avg initial cost
+        return_list.append(
+            running_quantcost / running_quant
+        )  # avg initial cost
 
     else:  # no existing stock owned
         # Only reachable if "buy"; add new row in Stocks table
@@ -310,7 +312,9 @@ def update_all(arg_list):
     # Query Stock table
     for code in codes:
         temp_dict = {}
-        owned = db.session.execute(db.select(Stock).filter_by(stock_code=code)).first()
+        owned = db.session.execute(
+            db.select(Stock).filter_by(stock_code=code)
+        ).first()
 
         new_indv_total_value = float(owned[0].quantity) * arg_list[code]
 
@@ -335,10 +339,13 @@ def update_all(arg_list):
 
         old_indv_total_value = avg_initial_cost * float(temp_dict["quantity"])
 
-        temp_dict.update({"pnl_raw": new_indv_total_value - old_indv_total_value})
+        temp_dict.update(
+            {"pnl_raw": new_indv_total_value - old_indv_total_value}
+        )
 
         pnl_percent = 100 * (
-            (new_indv_total_value - old_indv_total_value) / old_indv_total_value
+            (new_indv_total_value - old_indv_total_value)
+            / old_indv_total_value
         )
 
         temp_dict.update({"pnl_percent": pnl_percent})
