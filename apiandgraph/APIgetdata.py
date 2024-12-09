@@ -47,8 +47,7 @@ def process_stock_data(data, limit=10):
                 }
             )
         except (KeyError, ValueError) as e:
-            raise RuntimeError(f"Error processing 
-            data at {timestamp}: {e}") from e
+            raise RuntimeError(f"Error at {timestamp}: {e}") from e
 
     return processed_data
 
