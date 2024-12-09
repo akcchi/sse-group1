@@ -3,6 +3,7 @@ from requests.exceptions import RequestException
 
 API_KEY = "xxxxxxxxxxxx"
 
+
 def fetch_stock_data(symbol, interval="5min"):
     base_url = "https://www.alphavantage.co/query"
     params = {
@@ -19,41 +20,50 @@ def fetch_stock_data(symbol, interval="5min"):
             raise ValueError("Invalid response format or API limit reached.")
         return data
     except RequestException as e:
-        print(f"Network error: {e}")
-        return None
+        raise RuntimeError(f"Network error: {e}") from e
     except ValueError as e:
-        print(f"Data error: {e}")
-        return None
+        raise RuntimeError(f"Data error: {e}") from e
+
 
 def process_stock_data(data, limit=10):
     if not data or "Time Series (5min)" not in data:
-        print("No valid data found.")
-        return
+        raise ValueError("No valid data found.")
 
     time_series = data["Time Series (5min)"]
-    count = 0
+    processed_data = []
 
-    for timestamp, metrics in time_series.items():
-        if count >= limit:
+    for i, (timestamp, metrics) in enumerate(time_series.items()):
+        if i >= limit:
             break
         try:
-            open_price = float(metrics["1. open"])
-            high_price = float(metrics["2. high"])
-            low_price = float(metrics["3. low"])
-            close_price = float(metrics["4. close"])
-            volume = int(metrics["5. volume"])
-            print(f"Timestamp: {timestamp}")
-            print(
-                f"Open: {open_price}, High: {high_price}, Low: {low_price}, "
-                f"Close: {close_price}, Volume: {volume}"
+            processed_data.append(
+                {
+                    "timestamp": timestamp,
+                    "open": float(metrics["1. open"]),
+                    "high": float(metrics["2. high"]),
+                    "low": float(metrics["3. low"]),
+                    "close": float(metrics["4. close"]),
+                    "volume": int(metrics["5. volume"]),
+                }
             )
-            print("-" * 50)
-            count += 1
         except (KeyError, ValueError) as e:
-            print(f"Error processing data at {timestamp}: {e}")
+            raise RuntimeError(f"Error processing data at {timestamp}: {e}") from e
+
+    return processed_data
+
 
 if __name__ == "__main__":
     symbol = "AAPL"
     interval = "5min"
-    data = fetch_stock_data(symbol, interval)
-    process_stock_data(data, limit=10)
+    try:
+        data = fetch_stock_data(symbol, interval)
+        stock_data = process_stock_data(data, limit=10)
+        for entry in stock_data:
+            print(
+                f"Timestamp: {entry['timestamp']}, Open: {entry['open']}, "
+                f"High: {entry['high']}, Low: {entry['low']}, Close: {entry['close']}, "
+                f"Volume: {entry['volume']}"
+            )
+            print("-" * 50)
+    except RuntimeError as e:
+        print(f"An error occurred: {e}")
