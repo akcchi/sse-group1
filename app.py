@@ -91,7 +91,7 @@ app = Flask(__name__, static_url_path="/assets", static_folder="static/assets")
 
 # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tables.db"
 app.config["SQLALCHEMY_DATABASE_URI"] = (
-	"sqlite:///file::memory:?cache=private&uri=true"
+    "sqlite:///file::memory:?cache=private&uri=true"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = os.urandom(24).hex()
