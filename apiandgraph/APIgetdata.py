@@ -47,7 +47,8 @@ def process_stock_data(data, limit=10):
                 }
             )
         except (KeyError, ValueError) as e:
-            raise RuntimeError(f"Error processing data at {timestamp}: {e}") from e
+            raise RuntimeError(f"Error processing 
+            data at {timestamp}: {e}") from e
 
     return processed_data
 
@@ -60,8 +61,10 @@ if __name__ == "__main__":
         stock_data = process_stock_data(data, limit=10)
         for entry in stock_data:
             print(
-                f"Timestamp: {entry['timestamp']}, Open: {entry['open']}, "
-                f"High: {entry['high']}, Low: {entry['low']}, Close: {entry['close']}, "
+                f"Timestamp: {entry['timestamp']}, Open: 
+                {entry['open']}, "
+                f"High: {entry['high']}, Low: {entry['low']}, 
+                Close: {entry['close']}, "
                 f"Volume: {entry['volume']}"
             )
             print("-" * 50)
