@@ -304,7 +304,7 @@ def search():
     latest_price = None
 
     file_path = "./blueprints/us_stock_name1.csv"
-    symbol = request.form.get("symbol")
+    symbol = request.form.get("symbol").upper()
     date = request.form.get("date")  # Get stock symbol from form input
     current_date = datetime.strptime(date, "%Y-%m-%d")
     one_year_ago = current_date - timedelta(days=365)
